@@ -243,7 +243,7 @@ dotnet_diagnostic.IDE0005.severity = suggestion
 dotnet_diagnostic.IDE0007.severity = none
 
 # IDE0008: Use explicit type instead of 'var'
-dotnet_diagnostic.IDE0008.severity = suggestion
+dotnet_diagnostic.IDE0008.severity = error
 
 # IDE0010: Add missing cases in switch statement
 dotnet_diagnostic.IDE0010.severity = suggestion
@@ -271,6 +271,9 @@ dotnet_diagnostic.IDE0071.severity = suggestion
 
 # IDE1006: Naming rule violation
 dotnet_diagnostic.IDE1006.severity = none
+
+# IDE0090: Simplify new expression
+dotnet_diagnostic.IDE0090.severity = error
 
 
 ###########################

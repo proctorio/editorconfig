@@ -29,7 +29,7 @@
     <ItemGroup>
       <EditorConfigFilesToJoin Include="
           ..\Proctorio.EditorConfig.NuGet.Package.Internal\Templates\editorconfig.base;
-          ..\Proctorio.EditorConfig.NuGet.Package.Internal\Templates\require-configureawait.rules" />
+          ..\Proctorio.EditorConfig.NuGet.Package.Internal\Templates\no-configureawait.rules" />
     </ItemGroup>
     <ItemGroup>
       <EditorConfigFileContents Include="$([System.IO.File]::ReadAllText(%(EditorConfigFilesToJoin.Identity)))"/>

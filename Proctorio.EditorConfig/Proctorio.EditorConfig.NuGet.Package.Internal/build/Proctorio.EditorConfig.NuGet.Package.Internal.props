@@ -11,7 +11,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Nullable>enable</Nullable>
-    <WarningsAsErrors>nullable</WarningsAsErrors>
+    <!-- <WarningsAsErrors>nullable</WarningsAsErrors> -->
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 

@@ -1,20 +1,40 @@
-# Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+# EDITORCONFIG
+Proctorio.EditorConfig
+- The project will be used to distribute a standardized set of code quality rules across all repos that include it.
 
 # Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+
+## Setup guide
+There are two ways to clone this project:
+
+
+### VS Code (Note: C# projects should be run in visual studio)
+1. Click on **Clone in VS Code**.
+2. Open the project in Visual Studio.
+
+
+### Terminal
+1. Click on **Clone** and copy the repository link.
+2. Open a terminal window.
+3. Use command: `git clone git@ssh.dev.azure.com:v3/echovoice/Open/editorconfig`.
+
+## API References
+- N/A
+
+# Usage
+- user will import this into their project as a dependency, and it should automatically set the imported editorconfig file and properties as the root of config files.
 
 # Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+## Build
+1. Open the project in your C# development environment.
+2. Build the project by using the command line -
+`dotnet  restore`
+`dotnet  build`
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+## Test
+Tests are not yet implemented and may not ever be, as it is with eslint-config.
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+For further documentation on MS Test, please refer to [Microsoft documentation on unit testing with MSTest](https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-with-mstest).
+
+# Dependencies
+- No Dependencies as of yet

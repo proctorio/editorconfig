@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net5.0;netstandard2.0</TargetFrameworks>
+    <Version>0.0.0</Version>
+    <Authors>TODO</Authors>
+    <Company>TODO</Company>
+    <Product>Proctorio.EditorConfig.NuGet.Package</Product>    
+    <Description>Distributes a common .editorconfig file, where the code will run in a SynchronisationContext - i.e. where ConfigureAwait() is required on a Task - e.g. in a code library or UI project.</Description>
+    <Copyright>Copyright 2021 TODO</Copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>TODO</PackageProjectUrl>
+    <RepositoryUrl>TODO</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageIconUrl>TODO</PackageIconUrl>
+    <PackageTags>editorconfig, analyzer</PackageTags>
+    <PackageReleaseNotes>TODO</PackageReleaseNotes>
+    <IsPackable>true</IsPackable>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <IncludeSource>true</IncludeSource>
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <!-- Compose the .editorconfig file from the templates -->
+  <Target Name="CreateEditorConfig" BeforeTargets="BeforeBuild">
+    <ItemGroup>
+      <EditorConfigFilesToJoin Include="
+          ..\Proctorio.EditorConfig.NuGet.Package.Internal\Templates\editorconfig.base;
+          ..\Proctorio.EditorConfig.NuGet.Package.Internal\Templates\require-configureawait.rules" />
+    </ItemGroup>
+    <ItemGroup>
+      <EditorConfigFileContents Include="$([System.IO.File]::ReadAllText(%(EditorConfigFilesToJoin.Identity)))"/>
+    </ItemGroup>
+    <WriteLinesToFile File="Rules\.editorconfig" Lines="@(EditorConfigFileContents)" Overwrite="true" />
+  </Target>
+
+  <!-- Copy the common .props file -->
+  <Target Name="CopyPropsFile" BeforeTargets="BeforeBuild">
+      <Copy 
+        SourceFiles="..\Proctorio.EditorConfig.NuGet.Package.Internal\build\Proctorio.EditorConfig.NuGet.Package.Internal.props"
+        DestinationFiles="build\Proctorio.EditorConfig.NuGet.Package.props"
+        SkipUnchangedFiles="true"
+        UseHardlinksIfPossible="false" />
+  </Target>
+
+  <!-- Select the MSBuild props and composed .editorconfig files to pack -->
+  <ItemGroup>
+    <None Include="build\Proctorio.EditorConfig.NuGet.Package.props" Pack="true" PackagePath="build\" />
+    <Content Include="Rules\.editorconfig" Pack="true" PackagePath="content\Rules"></Content>
+  </ItemGroup>
+
+</Project>

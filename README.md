@@ -13,11 +13,6 @@ There are two ways to clone this project:
 2. Open the project in Visual Studio.
 
 
-### Terminal
-1. Click on **Clone** and copy the repository link.
-2. Open a terminal window.
-3. Use command: `git clone git@ssh.dev.azure.com:v3/echovoice/Open/editorconfig`.
-
 ## API References
 - N/A
 

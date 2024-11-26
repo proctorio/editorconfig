@@ -4,6 +4,7 @@
 dotnet_analyzer_diagnostic.severity = none
 
 # IDE0090: Use 'new(...)'
+dotnet_diagnostic.IDE0090.severity = none
 csharp_style_implicit_object_creation_when_type_is_apparent = false
 
 # Microsoft .NET properties

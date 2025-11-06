@@ -268,3 +268,12 @@ end_of_line = crlf
 dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_null_propagation = true:suggestion
 dotnet_style_explicit_tuple_names = true:suggestion
+#======================
+# No ConfigureAwait()
+#======================
+
+# CA2007: Do not directly await a Task
+dotnet_diagnostic.CA2007.severity = none
+
+# RCS1090: Add call to 'ConfigureAwait'
+dotnet_diagnostic.RCS1090.severity = none

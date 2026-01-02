@@ -1,21 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <!-- Universal package - no target framework needed for build tools/analyzers -->
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.0.0</Version>
+    <PackageId>Proctorio.EditorConfig</PackageId>
+    <Version>2.0.1</Version>
     <Authors>Proctorio</Authors>
     <Company>Proctorio</Company>
-    <Product>Proctorio.EditorConfig</Product>    
+    <Product>Proctorio.EditorConfig</Product>
     <Description>A comprehensive EditorConfig package that enforces consistent C# coding standards and best practices. Enforces explicit types (no var), underscore-prefixed private fields, modern C# patterns, and comprehensive formatting rules. Works with all .NET projects.</Description>
-    <Copyright>Copyright © 2025 Proctorio</Copyright>
+    <Copyright>Copyright  2025 Proctorio</Copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/proctorio/editorconfig</PackageProjectUrl>
     <RepositoryUrl>https://github.com/proctorio/editorconfig</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>editorconfig;analyzer;code-style;csharp;dotnet;formatting;standards</PackageTags>
-    <PackageReleaseNotes>v1.0.0: Initial release with comprehensive C# style rules, explicit type enforcement, modern C# patterns, and full formatting standards.</PackageReleaseNotes>
-    
+    <PackageReleaseNotes>v2.0.1: Fixed .editorconfig file deployment - props file now correctly named to match PackageId for NuGet auto-import.</PackageReleaseNotes>
+
     <!-- Package Configuration -->
     <IsPackable>true</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -24,10 +25,10 @@
     <NoDefaultExcludes>true</NoDefaultExcludes>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    
+
     <!-- Suppress warnings for content-only packages -->
     <NoWarn>$(NoWarn);NU5128;NU5129</NoWarn>
-    
+
     <!-- NuGet Package Properties -->
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -46,28 +47,28 @@
     <WriteLinesToFile File="Rules\.editorconfig" Lines="@(EditorConfigFileContents)" Overwrite="true" />
   </Target>
 
-  <!-- Copy the common .props file -->
+  <!-- Copy the common .props file with correct name matching PackageId -->
   <Target Name="CopyPropsFile" BeforeTargets="BeforeBuild">
-      <Copy 
+      <Copy
         SourceFiles="..\Proctorio.EditorConfig.NuGet.Package.Internal\build\Proctorio.EditorConfig.NuGet.Package.Internal.props"
-        DestinationFiles="build\Proctorio.EditorConfig.NuGet.Package.props"
+        DestinationFiles="build\Proctorio.EditorConfig.props"
         SkipUnchangedFiles="true"
         UseHardlinksIfPossible="false" />
   </Target>
 
   <!-- Package files for NuGet -->
   <ItemGroup>
-    <!-- MSBuild props file that integrates the editorconfig -->
-    <None Include="build\Proctorio.EditorConfig.NuGet.Package.props" Pack="true" PackagePath="build\" />
-    <None Include="build\Proctorio.EditorConfig.NuGet.Package.props" Pack="true" PackagePath="buildTransitive\" />
-    
+    <!-- MSBuild props file that integrates the editorconfig - MUST match PackageId for auto-import -->
+    <None Include="build\Proctorio.EditorConfig.props" Pack="true" PackagePath="build\" />
+    <None Include="build\Proctorio.EditorConfig.props" Pack="true" PackagePath="buildTransitive\" />
+
     <!-- EditorConfig file -->
     <Content Include="Rules\.editorconfig" Pack="true" PackagePath="content\Rules" />
     <Content Include="Rules\.editorconfig" Pack="true" PackagePath="contentFiles\any\any\Rules" />
-    
+
     <!-- Package README -->
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
-    
+
     <!-- Package icon (if exists) -->
     <None Include="..\..\icon.png" Pack="true" PackagePath="\" Condition="Exists('..\..\icon.png')" />
   </ItemGroup>

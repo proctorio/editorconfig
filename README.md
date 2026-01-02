@@ -5,7 +5,7 @@ Standardized C# code style rules for all Proctorio projects.
 ## Install
 
 ```bash
-dotnet add package Proctorio.EditorConfig.NuGet.Package
+dotnet add package Proctorio.EditorConfig
 ```
 
 That's it. Rules apply automatically on build.

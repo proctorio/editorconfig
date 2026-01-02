@@ -1,22 +1,20 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <!-- Universal package - no target framework needed for build tools/analyzers -->
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Proctorio.EditorConfig</PackageId>
-    <Version>2.0.1</Version>
+    <Version>2.0.0</Version>
     <Authors>Proctorio</Authors>
     <Company>Proctorio</Company>
     <Product>Proctorio.EditorConfig</Product>
     <Description>A comprehensive EditorConfig package that enforces consistent C# coding standards and best practices. Enforces explicit types (no var), underscore-prefixed private fields, modern C# patterns, and comprehensive formatting rules. Works with all .NET projects.</Description>
     <Copyright>Copyright  2025 Proctorio</Copyright>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageLicenseExpression>Unlicense</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/proctorio/editorconfig</PackageProjectUrl>
     <RepositoryUrl>https://github.com/proctorio/editorconfig</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>editorconfig;analyzer;code-style;csharp;dotnet;formatting;standards</PackageTags>
-    <PackageReleaseNotes>v2.0.1: Fixed .editorconfig file deployment - props file now correctly named to match PackageId for NuGet auto-import.</PackageReleaseNotes>
-
     <!-- Package Configuration -->
     <IsPackable>true</IsPackable>
     <IncludeBuildOutput>false</IncludeBuildOutput>

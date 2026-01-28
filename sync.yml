@@ -13,6 +13,6 @@ resources:
       name: Open/editorconfig
 
 stages:
-- template: stages/sync/azure-sync.yml@templates  # Template reference
+- template: stages/sync/sync.yml@templates  # Template reference
   parameters:
     checkout: editorconfig

@@ -48,6 +48,7 @@ public class BuildIntegrationTests
     }
 
     private const string PropsFile = "Proctorio.EditorConfig.NuGet.Package.Internal.props";
+    private const string GlobalConfigFile = "Proctorio.EditorConfig.globalconfig";
     private const string TargetsFile = "Proctorio.EditorConfig.NuGet.Package.Internal.targets";
 
     [TestMethod]
@@ -236,6 +237,138 @@ namespace Sample
         {
             Directory.Delete(dir, recursive: true);
         }
+    }
+
+    [TestMethod]
+    public void Build_FreshProjectWithoutEditorConfigGetsPackageSeveritiesOnFirstBuild()
+    {
+        // Arrange - a package laid out as NuGet extracts it, and a consumer that does not track a copied .editorconfig
+        string dir = NewTempDir();
+        try
+        {
+            string package = Path.Combine(dir, "package");
+            string props = CopyBuildFile(package, "build", PropsFile);
+            string rules = Path.Combine(package, "content", "Rules");
+            Directory.CreateDirectory(rules);
+            File.Copy(FindRepoFile("Proctorio.EditorConfig.NuGet.Package", Path.Combine("Rules", ".editorconfig")), Path.Combine(rules, ".editorconfig"));
+            string globalConfig = FindRepoFile("Proctorio.EditorConfig.NuGet.Package", Path.Combine("Rules", GlobalConfigFile));
+            File.Copy(globalConfig, Path.Combine(rules, GlobalConfigFile));
+
+            string consumer = Path.Combine(dir, "consumer");
+            Directory.CreateDirectory(consumer);
+            File.WriteAllText(Path.Combine(consumer, "Types.cs"), @"
+using System.Threading;
+using System.Threading.Tasks;
+namespace Sample
+{
+    public class Worker
+    {
+        public async Task RunAsync(CancellationToken cancellationToken)
+        {
+            await Task.Delay(1, cancellationToken);
+            await Task.Delay(1);
+            var x = 1;
+            System.Console.WriteLine(x);
+        }
+    }
+}
+");
+            string project = Path.Combine(consumer, "Sample.csproj");
+            File.WriteAllText(project, ConsumerProject("Library", new[] { props }, Array.Empty<string>(), "<ItemGroup><PackageReference Remove=\"@(PackageReference)\" /></ItemGroup>"));
+            Assert.IsFalse(File.Exists(Path.Combine(consumer, ".editorconfig")));
+
+            // Act - the first build only
+            string output = RunDotnet(consumer, "build", project, "-nologo", "--no-incremental");
+
+            // Assert
+            Assert.IsFalse(output.Contains("warning CA2007"), "CA2007 is switched off by the package rules, even on the first build\n" + output);
+            Assert.IsFalse(output.Contains("warning IDE0008"), "IDE0008 is a suggestion, not a warning\n" + output);
+            Assert.IsFalse(output.Contains("MultipleGlobalAnalyzerKeys"), "The global_level must not tie with an SDK/NetAnalyzers config\n" + output);
+            Assert.IsTrue(output.Contains("warning CA2016"), "CA2016 (Reliability) should stay a warning\n" + output);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void GlobalConfig_EqualsTheFlattenedCsKeysOfTheComposedEditorConfig()
+    {
+        // Arrange - the composed .editorconfig is the single source of truth
+        string composed = File.ReadAllText(Path.Combine("Templates", "editorconfig.base")) + Environment.NewLine
+            + File.ReadAllText(Path.Combine("Templates", "no-configureawait.rules"));
+        string dir = NewTempDir();
+        try
+        {
+            string generated = Path.Combine(dir, GlobalConfigFile);
+            string packageProject = FindRepoFile("Proctorio.EditorConfig.NuGet.Package", "Proctorio.EditorConfig.NuGet.Package.csproj");
+
+            // Act - run the package project's own generation target, writing to a scratch path
+            string output = RunDotnet(dir, "msbuild", packageProject, "-nologo", "-t:CreateGlobalConfig", $"-p:ProctorioGlobalConfigFile={generated}");
+
+            // Assert
+            Assert.IsTrue(File.Exists(generated), output);
+            string[] lines = File.ReadAllLines(generated);
+            string[] body = lines.Where(l => l.Length > 0 && !l.StartsWith('#')).ToArray();
+            Assert.AreEqual("is_global = true", body[0]);
+            Assert.AreEqual("global_level = -50", body[1]);
+            Assert.IsFalse(body.Any(l => l.StartsWith('[')), "A global config has no section headers");
+            Assert.IsFalse(body.Any(l => l.StartsWith("root")), "root = true is dropped");
+
+            List<string> expected = FlattenCsKeys(composed);
+            CollectionAssert.AreEqual(expected, body.Skip(2).ToList());
+            Assert.IsFalse(body.Any(l => l.StartsWith("indent_style = tab")), "The xml/csproj section must not leak in");
+
+            string tracked = File.ReadAllText(FindRepoFile("Proctorio.EditorConfig.NuGet.Package", Path.Combine("Rules", GlobalConfigFile)));
+            Assert.AreEqual(File.ReadAllText(generated), tracked, "The committed Rules/" + GlobalConfigFile + " is stale; build the package project and commit it");
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [TestMethod]
+    public void Props_AddTheGlobalConfigAndPackageProjectPacksIt()
+    {
+        // Arrange
+        string props = File.ReadAllText(Path.Combine(BuildPath, PropsFile));
+        string csproj = File.ReadAllText(FindRepoFile("Proctorio.EditorConfig.NuGet.Package", "Proctorio.EditorConfig.NuGet.Package.csproj"));
+
+        // Act & Assert
+        Assert.IsTrue(props.Contains("<GlobalAnalyzerConfigFiles Include=\"$(MSBuildThisFileDirectory)..\\content\\Rules\\" + GlobalConfigFile + "\" />"));
+        Assert.IsTrue(csproj.Contains("Include=\"Rules\\" + GlobalConfigFile + "\" Pack=\"true\" PackagePath=\"content\\Rules\""));
+        Assert.IsTrue(csproj.Contains("Include=\"Rules\\" + GlobalConfigFile + "\" Pack=\"true\" PackagePath=\"contentFiles\\any\\any\\Rules\""));
+    }
+
+    // Independent of the package's inline task: every key from a section matching *.cs, in file order, later values win
+    private static List<string> FlattenCsKeys(string editorConfig)
+    {
+        List<string> order = new();
+        Dictionary<string, string> latest = new(StringComparer.OrdinalIgnoreCase);
+        bool matches = false;
+        foreach (string raw in editorConfig.Split('\n'))
+        {
+            string line = raw.Trim();
+            if (line.StartsWith('['))
+            {
+                string glob = line.Trim('[', ']');
+                matches = glob == "*.cs" || (glob.StartsWith("*.{") && glob.TrimEnd('}')[3..].Split(',').Contains("cs"));
+            }
+            else if (matches && line.Length > 0 && line[0] != '#' && line.Contains('='))
+            {
+                string key = line[..line.IndexOf('=')].Trim();
+                if (!latest.ContainsKey(key))
+                {
+                    order.Add(key);
+                }
+
+                latest[key] = line[(line.IndexOf('=') + 1)..].Trim();
+            }
+        }
+
+        return order.Select(k => $"{k} = {latest[k]}").ToList();
     }
 
     [TestMethod]

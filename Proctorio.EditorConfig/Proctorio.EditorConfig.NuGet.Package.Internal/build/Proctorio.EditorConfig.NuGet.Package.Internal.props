@@ -50,6 +50,12 @@
 
   <ItemGroup Condition="'$(_ProctorioEditorConfigPropsOwner)' == '$(MSBuildThisFileFullPath)'">
     <EditorConfigFilesToCopy Include="$(MSBuildThisFileDirectory)..\content\Rules\.editorconfig" />
+    <!--
+      Roslyn reads global analyzer configs at evaluation time, so these severities apply to the first
+      compile of a fresh checkout, before CopyEditorConfig has written anything. The copied .editorconfig
+      is kept for the IDE; a path-based .editorconfig still beats this file where one exists.
+    -->
+    <GlobalAnalyzerConfigFiles Include="$(MSBuildThisFileDirectory)..\content\Rules\Proctorio.EditorConfig.globalconfig" />
   </ItemGroup>
 
   <Target Name="CopyEditorConfig" BeforeTargets="BeforeBuild" Condition="'$(_ProctorioEditorConfigPropsOwner)' != ''">

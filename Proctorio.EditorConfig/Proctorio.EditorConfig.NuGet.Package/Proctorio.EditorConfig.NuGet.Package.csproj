@@ -4,7 +4,7 @@
     <!-- Universal package - no target framework needed for build tools/analyzers -->
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Proctorio.EditorConfig</PackageId>
-    <Version>2.1.0</Version>
+    <Version>2.2.0</Version>
     <Authors>Proctorio</Authors>
     <Company>Proctorio</Company>
     <Product>Proctorio.EditorConfig</Product>
@@ -45,6 +45,120 @@
     <WriteLinesToFile File="Rules\.editorconfig" Lines="@(EditorConfigFileContents)" Overwrite="true" />
   </Target>
 
+  <!--
+    Flatten the composed Rules\.editorconfig into a global analyzer config. Roslyn reads a
+    GlobalAnalyzerConfigFiles item at evaluation time, so the severities are right on the very
+    first compile of a fresh checkout. The copied .editorconfig is only written by a target that
+    runs in the same build, which is too late for consumers that do not track it in git.
+    The .editorconfig stays the single source of truth: this takes every section whose glob
+    matches *.cs, in file order (later sections win on a duplicate key), and drops root = true.
+    An inline task keeps this in the package project, so there is nothing else to build or publish.
+  -->
+  <UsingTask TaskName="FlattenEditorConfigToGlobalConfig"
+             TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <InputFile ParameterType="System.String" Required="true" />
+      <OutputFile ParameterType="System.String" Required="true" />
+      <GlobalLevel ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.Collections.Generic" />
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        List<string> keys = new List<string>();
+        Dictionary<string, string> values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        bool inCsSection = false;
+        foreach (string rawLine in File.ReadAllLines(InputFile))
+        {
+            string line = rawLine.Trim();
+            if (line.Length == 0 || line[0] == '#' || line[0] == ';')
+            {
+                continue;
+            }
+
+            if (line[0] == '[' && line[line.Length - 1] == ']')
+            {
+                string glob = line.Substring(1, line.Length - 2).Trim();
+                inCsSection = false;
+                if (glob == "*" || glob == "**")
+                {
+                    inCsSection = true;
+                }
+                else if (glob == "*.cs" || glob == "**.cs")
+                {
+                    inCsSection = true;
+                }
+                else if (glob.StartsWith("*.{") && glob.EndsWith("}"))
+                {
+                    foreach (string extension in glob.Substring(3, glob.Length - 4).Split(','))
+                    {
+                        if (extension.Trim() == "cs")
+                        {
+                            inCsSection = true;
+                        }
+                    }
+                }
+
+                continue;
+            }
+
+            int equals = line.IndexOf('=');
+            if (!inCsSection || equals <= 0)
+            {
+                continue;
+            }
+
+            string key = line.Substring(0, equals).Trim();
+            string value = line.Substring(equals + 1).Trim();
+            if (!values.ContainsKey(key))
+            {
+                keys.Add(key);
+            }
+
+            values[key] = value;
+        }
+
+        StringBuilder text = new StringBuilder();
+        text.Append("# Generated from Rules/.editorconfig by the Proctorio.EditorConfig package build. Do not edit.\n");
+        text.Append("is_global = true\n");
+        text.Append("global_level = ").Append(GlobalLevel).Append('\n');
+        text.Append('\n');
+        foreach (string key in keys)
+        {
+            text.Append(key).Append(" = ").Append(values[key]).Append('\n');
+        }
+
+        string directory = Path.GetDirectoryName(Path.GetFullPath(OutputFile));
+        Directory.CreateDirectory(directory);
+        string newText = text.ToString();
+        if (!File.Exists(OutputFile) || File.ReadAllText(OutputFile) != newText)
+        {
+            File.WriteAllText(OutputFile, newText, new UTF8Encoding(false));
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <PropertyGroup>
+    <!--
+      The SDK and NetAnalyzers globalconfigs (AnalysisLevel / AnalysisMode) use global_level -100 and -99.
+      -50 beats them, so the category severities here are not overridden by them, and it stays below the
+      default level 0 so a consumer's own .globalconfig still wins. Two configs at the same level that set
+      the same key raise a warning, so this must not equal -99 or -100.
+    -->
+    <ProctorioGlobalConfigLevel>-50</ProctorioGlobalConfigLevel>
+    <ProctorioGlobalConfigFile>Rules\Proctorio.EditorConfig.globalconfig</ProctorioGlobalConfigFile>
+  </PropertyGroup>
+
+  <Target Name="CreateGlobalConfig" DependsOnTargets="CreateEditorConfig" BeforeTargets="BeforeBuild">
+    <FlattenEditorConfigToGlobalConfig InputFile="Rules\.editorconfig"
+                                       OutputFile="$(ProctorioGlobalConfigFile)"
+                                       GlobalLevel="$(ProctorioGlobalConfigLevel)" />
+  </Target>
+
   <!-- Copy the common .props and .targets files with correct names matching PackageId -->
   <Target Name="CopyPropsFile" BeforeTargets="BeforeBuild">
       <Copy
@@ -70,6 +184,10 @@
     <!-- EditorConfig file -->
     <Content Include="Rules\.editorconfig" Pack="true" PackagePath="content\Rules" />
     <Content Include="Rules\.editorconfig" Pack="true" PackagePath="contentFiles\any\any\Rules" />
+
+    <!-- Global analyzer config generated from the .editorconfig; the props add it to GlobalAnalyzerConfigFiles -->
+    <Content Include="Rules\Proctorio.EditorConfig.globalconfig" Pack="true" PackagePath="content\Rules" />
+    <Content Include="Rules\Proctorio.EditorConfig.globalconfig" Pack="true" PackagePath="contentFiles\any\any\Rules" />
 
     <!-- Package README -->
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />

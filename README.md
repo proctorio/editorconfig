@@ -16,6 +16,14 @@ Correctness analyzers (Reliability, Security and Usage categories, for example C
 
 CS1591 (missing XML comment) is only reported for packable libraries. Executables, test projects and projects with `<IsPackable>false</IsPackable>` have it suppressed.
 
+## 2.2.0: correct severities on the first build
+
+The package now also ships its rules as a global analyzer config, `Proctorio.EditorConfig.globalconfig`, generated from the same `.editorconfig` and added to the build automatically. The compiler reads it before anything is compiled, so a fresh checkout (every CI build) gets the right severities on its very first build. Before, the severities came only from the `.editorconfig` copied into your project folder during the build, and a project that did not commit that copy compiled once without it.
+
+You no longer need to commit the copied `.editorconfig`, and a repo that gitignores it works. The copy is still written for IDE formatting and is unchanged.
+
+If a project tracks an OLD copied `.editorconfig` (from a 1.x or 2.0.x package), that file wins over the global config because path-based `.editorconfig` files take precedence. Update it by building once with 2.2.0 and committing the new copy, or delete it.
+
 ## What This Enforces
 
 The first three examples below are IDE suggestions, so they do not fail or warn in the pipeline. The last one, CA2016, is a Reliability rule and is still a build warning.

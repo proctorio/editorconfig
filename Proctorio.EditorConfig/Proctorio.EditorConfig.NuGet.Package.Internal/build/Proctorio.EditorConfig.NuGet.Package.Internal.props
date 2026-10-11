@@ -1,9 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
+  <!--
+    A direct PackageReference imports this file twice, once from build/ and once from
+    buildTransitive/. MSBuild evaluates all properties before any items, so a plain
+    "already imported" flag would hide the items from the first import as well. Record the
+    path of the first import instead; every property, item and target below applies only
+    when it belongs to that first import.
+  -->
+  <PropertyGroup Condition="'$(ProctorioEditorConfigPropsImported)' != 'true'">
+    <ProctorioEditorConfigPropsImported>true</ProctorioEditorConfigPropsImported>
+    <_ProctorioEditorConfigPropsOwner>$(MSBuildThisFileFullPath)</_ProctorioEditorConfigPropsOwner>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(_ProctorioEditorConfigPropsOwner)' == '$(MSBuildThisFileFullPath)'">
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <!--
+      Not AllEnabledByDefault: that mode ships an explicit dotnet_diagnostic.CAxxxx.severity = warning
+      line for every CA rule, and an explicit rule line beats the category severities in the
+      .editorconfig, so the category split (warning for Reliability/Security/Usage, suggestion for
+      the rest) would not apply to any CA rule. Default mode leaves the other categories to the
+      .editorconfig; the three correctness categories still get every rule.
+    -->
+    <AnalysisMode>Default</AnalysisMode>
+    <AnalysisModeReliability>All</AnalysisModeReliability>
+    <AnalysisModeSecurity>All</AnalysisModeSecurity>
+    <AnalysisModeUsage>All</AnalysisModeUsage>
     <AnalysisLevel>latest</AnalysisLevel>
     <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
     <RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
@@ -15,7 +37,7 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(_ProctorioEditorConfigPropsOwner)' == '$(MSBuildThisFileFullPath)'">
     <!-- 
       Workaround for changing severity of rules with Location.None - e.g. CA1014
         - see https://github.com/dotnet/roslyn/issues/37876#issuecomment-738042719
@@ -26,11 +48,11 @@
     <NoWarn>$(NoWarn);CA1014</NoWarn>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(_ProctorioEditorConfigPropsOwner)' == '$(MSBuildThisFileFullPath)'">
     <EditorConfigFilesToCopy Include="$(MSBuildThisFileDirectory)..\content\Rules\.editorconfig" />
   </ItemGroup>
 
-  <Target Name="CopyEditorConfig" BeforeTargets="BeforeBuild">
+  <Target Name="CopyEditorConfig" BeforeTargets="BeforeBuild" Condition="'$(_ProctorioEditorConfigPropsOwner)' != ''">
       <Message Text="Copying the .editorconfig file from '@(EditorConfigFilesToCopy)' to '$(MSBuildProjectDirectory)'"></Message>
       <Copy 
         SourceFiles="@(EditorConfigFilesToCopy)"
@@ -39,7 +61,7 @@
         UseHardlinksIfPossible="false" />
   </Target>
   
-  <ItemGroup>
+  <ItemGroup Condition="'$(_ProctorioEditorConfigPropsOwner)' == '$(MSBuildThisFileFullPath)'">
     <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

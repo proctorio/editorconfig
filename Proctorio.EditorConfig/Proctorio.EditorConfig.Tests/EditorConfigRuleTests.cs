@@ -33,15 +33,15 @@ public class EditorConfigRuleTests
     }
 
     [TestMethod]
-    public void EditorConfigBase_EnablesExplicitType()
+    public void EditorConfigBase_EnablesExplicitTypeAsSuggestion()
     {
         // Arrange
         string filePath = Path.Combine(TemplatesPath, "editorconfig.base");
         string content = File.ReadAllText(filePath);
 
         // Act & Assert - Check that IDE0008 (use explicit type) is enabled
-        Assert.IsTrue(content.Contains("dotnet_diagnostic.IDE0008.severity = warning"), 
-            "IDE0008 should be enabled to enforce explicit types");
+        Assert.IsTrue(content.Contains("dotnet_diagnostic.IDE0008.severity = suggestion"), 
+            "IDE0008 should stay enabled to flag 'var', as a suggestion rather than a pipeline warning");
     }
 
     [TestMethod]
@@ -216,5 +216,59 @@ public class EditorConfigRuleTests
         // Act & Assert
         Assert.IsTrue(content.Contains("indent_style = space") || content.Contains("indent_size"), 
             "Should specify indentation preferences");
+    }
+
+    [DataTestMethod]
+    [DataRow("Reliability", "warning")]
+    [DataRow("Security", "warning")]
+    [DataRow("Usage", "warning")]
+    [DataRow("Style", "suggestion")]
+    [DataRow("Naming", "suggestion")]
+    [DataRow("Documentation", "suggestion")]
+    [DataRow("Design", "suggestion")]
+    [DataRow("Maintainability", "suggestion")]
+    [DataRow("Performance", "suggestion")]
+    [DataRow("Globalization", "suggestion")]
+    public void EditorConfigBase_SetsCategorySeverity(string category, string expected)
+    {
+        // Arrange
+        string content = File.ReadAllText(Path.Combine(TemplatesPath, "editorconfig.base"));
+
+        // Act & Assert
+        Assert.IsTrue(content.Contains($"dotnet_analyzer_diagnostic.category-{category}.severity = {expected}"),
+            $"Category {category} should be {expected}");
+    }
+
+    [TestMethod]
+    public void EditorConfigBase_OnlyCorrectnessRulesAreHardSetToWarning()
+    {
+        // Arrange
+        string[] lines = File.ReadAllLines(Path.Combine(TemplatesPath, "editorconfig.base"));
+
+        // Act - every per-rule or naming-rule line that is a warning
+        List<string> warnings = lines
+            .Select(l => l.Trim())
+            .Where(l => !l.StartsWith('#'))
+            .Where(l => l.StartsWith("dotnet_diagnostic.") || l.StartsWith("dotnet_naming_rule.") || l.StartsWith("resharper_"))
+            .Where(l => l.EndsWith("= warning"))
+            .ToList();
+
+        // Assert - only the CA2xxx reliability rule is allowed to stay a warning
+        List<string> offenders = warnings.Where(l => !l.StartsWith("dotnet_diagnostic.CA2")).ToList();
+        Assert.AreEqual(0, offenders.Count, $"Style/naming/design rules hard-set to warning: {string.Join("; ", offenders)}");
+        Assert.IsTrue(warnings.Any(l => l.StartsWith("dotnet_diagnostic.CA2016.")), "CA2016 should stay a warning");
+    }
+
+    [TestMethod]
+    public void EditorConfigBase_StyleOptionSeveritiesAreNotWarnings()
+    {
+        // Arrange
+        string[] lines = File.ReadAllLines(Path.Combine(TemplatesPath, "editorconfig.base"));
+
+        // Act - option lines of the form "csharp_style_x = value:warning"
+        List<string> offenders = lines.Select(l => l.Trim()).Where(l => !l.StartsWith('#') && l.EndsWith(":warning")).ToList();
+
+        // Assert
+        Assert.AreEqual(0, offenders.Count, $"Style options with a warning severity: {string.Join("; ", offenders)}");
     }
 }

@@ -4,7 +4,7 @@
     <!-- Universal package - no target framework needed for build tools/analyzers -->
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageId>Proctorio.EditorConfig</PackageId>
-    <Version>2.0.0</Version>
+    <Version>2.1.0</Version>
     <Authors>Proctorio</Authors>
     <Company>Proctorio</Company>
     <Product>Proctorio.EditorConfig</Product>
@@ -45,11 +45,16 @@
     <WriteLinesToFile File="Rules\.editorconfig" Lines="@(EditorConfigFileContents)" Overwrite="true" />
   </Target>
 
-  <!-- Copy the common .props file with correct name matching PackageId -->
+  <!-- Copy the common .props and .targets files with correct names matching PackageId -->
   <Target Name="CopyPropsFile" BeforeTargets="BeforeBuild">
       <Copy
         SourceFiles="..\Proctorio.EditorConfig.NuGet.Package.Internal\build\Proctorio.EditorConfig.NuGet.Package.Internal.props"
         DestinationFiles="build\Proctorio.EditorConfig.props"
+        SkipUnchangedFiles="true"
+        UseHardlinksIfPossible="false" />
+      <Copy
+        SourceFiles="..\Proctorio.EditorConfig.NuGet.Package.Internal\build\Proctorio.EditorConfig.NuGet.Package.Internal.targets"
+        DestinationFiles="build\Proctorio.EditorConfig.targets"
         SkipUnchangedFiles="true"
         UseHardlinksIfPossible="false" />
   </Target>
@@ -59,6 +64,8 @@
     <!-- MSBuild props file that integrates the editorconfig - MUST match PackageId for auto-import -->
     <None Include="build\Proctorio.EditorConfig.props" Pack="true" PackagePath="build\" />
     <None Include="build\Proctorio.EditorConfig.props" Pack="true" PackagePath="buildTransitive\" />
+    <None Include="build\Proctorio.EditorConfig.targets" Pack="true" PackagePath="build\" />
+    <None Include="build\Proctorio.EditorConfig.targets" Pack="true" PackagePath="buildTransitive\" />
 
     <!-- EditorConfig file -->
     <Content Include="Rules\.editorconfig" Pack="true" PackagePath="content\Rules" />

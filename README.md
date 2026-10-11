@@ -10,11 +10,19 @@ dotnet add package Proctorio.EditorConfig
 
 That's it. Rules apply automatically on build.
 
+## Severities
+
+Correctness analyzers (Reliability, Security and Usage categories, for example CA2xxx) and compiler nullability warnings are warnings. Style, naming, documentation, design, maintainability, performance and globalization analyzers are suggestions: they show in the IDE and do not appear as build warnings. Underscore test names (CA1707) and namespace style are therefore fine.
+
+CS1591 (missing XML comment) is only reported for packable libraries. Executables, test projects and projects with `<IsPackable>false</IsPackable>` have it suppressed.
+
 ## What This Enforces
+
+The first three examples below are IDE suggestions, so they do not fail or warn in the pipeline. The last one, CA2016, is a Reliability rule and is still a build warning.
 
 **Explicit types** - No `var`. Ever.
 ```csharp
-// ❌ This will warn
+// ❌ Suggestion
 var user = GetUser();
 
 // ✅ Do this
@@ -23,7 +31,7 @@ User user = GetUser();
 
 **Private field naming** - Must use underscore prefix.
 ```csharp
-// ❌ Warning
+// ❌ Suggestion
 private string userName;
 
 // ✅ Correct
@@ -32,7 +40,7 @@ private string _userName;
 
 **Readonly fields** - If a field doesn't change, mark it readonly.
 ```csharp
-// ❌ Warning if never reassigned
+// ❌ Suggestion if never reassigned
 private IUserRepository _repo;
 
 // ✅ Better
@@ -41,7 +49,7 @@ private readonly IUserRepository _repo;
 
 **CancellationToken forwarding** - Pass tokens through async calls.
 ```csharp
-// ❌ Warning
+// ❌ Warning (CA2016)
 await DoWorkAsync();
 
 // ✅ Pass it along

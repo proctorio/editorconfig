@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    Package .targets are imported after the project body (nuget.g.targets, from
+    Microsoft.Common.targets), unlike the .props, which are imported before it. OutputType,
+    IsPackable and IsTestProject are therefore known here and are not in the .props.
+
+    The .props turn on GenerateDocumentationFile, which makes the compiler report CS1591
+    (missing XML comment) for every public member. That is only worth reporting for a library
+    other people consume as a package. Everything else gets CS1591 added to NoWarn.
+
+    The check runs in a target just before CoreCompile instead of at evaluation time, because
+    a test project is only recognisable by its Microsoft.NET.Test.Sdk PackageReference and
+    item lists are not available to property conditions at evaluation time. NoWarn is read
+    when the compiler task runs, so a value set here is used.
+
+    A project counts as a test project when IsTestProject is true, when it references
+    Microsoft.NET.Test.Sdk (which sets IsTestProject itself, but from a .targets file that
+    NuGet may import after this one), or when its name ends in .Tests or .IntegrationTests.
+  -->
+  <PropertyGroup Condition="'$(ProctorioEditorConfigTargetsImported)' != 'true'">
+    <ProctorioEditorConfigTargetsImported>true</ProctorioEditorConfigTargetsImported>
+  </PropertyGroup>
+
+  <!-- Defined by both the build/ and buildTransitive/ import; the later definition replaces the
+       earlier one, and a target runs once per build, so the duplicate import is harmless. -->
+  <Target Name="ProctorioEditorConfigSuppressMissingDocs" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <_ProctorioTestSdkReference Include="@(PackageReference)" Condition="'%(Identity)' == 'Microsoft.NET.Test.Sdk'" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_ProctorioIsTestProject>false</_ProctorioIsTestProject>
+      <_ProctorioIsTestProject Condition="'$(IsTestProject)' == 'true'">true</_ProctorioIsTestProject>
+      <_ProctorioIsTestProject Condition="'@(_ProctorioTestSdkReference)' != ''">true</_ProctorioIsTestProject>
+      <_ProctorioIsTestProject Condition="$(MSBuildProjectName.EndsWith('.Tests')) or $(MSBuildProjectName.EndsWith('.IntegrationTests'))">true</_ProctorioIsTestProject>
+      <_ProctorioIsPackableLibrary>false</_ProctorioIsPackableLibrary>
+      <_ProctorioIsPackableLibrary Condition="'$(OutputType)' == 'Library' and '$(IsPackable)' != 'false' and '$(_ProctorioIsTestProject)' != 'true'">true</_ProctorioIsPackableLibrary>
+      <NoWarn Condition="'$(_ProctorioIsPackableLibrary)' != 'true'">$(NoWarn);CS1591</NoWarn>
+    </PropertyGroup>
+  </Target>
+</Project>

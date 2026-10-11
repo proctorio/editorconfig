@@ -32,6 +32,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Build\%(Filename)%(Extension)</Link>
     </Content>
+    <Content Include="..\Proctorio.EditorConfig.NuGet.Package.Internal\build\*.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Build\%(Filename)%(Extension)</Link>
+    </Content>
   </ItemGroup>
 
 </Project>

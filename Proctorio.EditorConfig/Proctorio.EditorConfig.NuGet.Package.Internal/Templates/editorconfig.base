@@ -1,19 +1,34 @@
 [*.cs]
 
-# Default severity for all analyzer diagnostics
+# Default severity for analyzer diagnostics whose category is not listed below.
 dotnet_analyzer_diagnostic.severity = warning
+
+# Category severities. Correctness analyzers (Reliability, Security, Usage) are warnings.
+# Style, naming, documentation, design, maintainability, performance and globalization
+# analyzers are suggestions: they show in the IDE but do not become pipeline warnings.
+# An explicit dotnet_diagnostic.<ID>.severity line below still wins over a category line.
+dotnet_analyzer_diagnostic.category-Reliability.severity = warning
+dotnet_analyzer_diagnostic.category-Security.severity = warning
+dotnet_analyzer_diagnostic.category-Usage.severity = warning
+dotnet_analyzer_diagnostic.category-Style.severity = suggestion
+dotnet_analyzer_diagnostic.category-Naming.severity = suggestion
+dotnet_analyzer_diagnostic.category-Documentation.severity = suggestion
+dotnet_analyzer_diagnostic.category-Design.severity = suggestion
+dotnet_analyzer_diagnostic.category-Maintainability.severity = suggestion
+dotnet_analyzer_diagnostic.category-Performance.severity = suggestion
+dotnet_analyzer_diagnostic.category-Globalization.severity = suggestion
 
 csharp_preferred_modifier_order = public, private, protected, internal, file, new, static, abstract, virtual, sealed, readonly, override, extern, unsafe, volatile, async, required:suggestion 
 csharp_style_prefer_utf8_string_literals = true:suggestion
-csharp_style_var_elsewhere = false:warning
-csharp_style_var_for_built_in_types = false:warning
-csharp_style_var_when_type_is_apparent = false:warning
+csharp_style_var_elsewhere = false:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_when_type_is_apparent = false:suggestion
 
 # IDE0007: Use 'var' instead of explicit type (disable - we want explicit types)
 dotnet_diagnostic.IDE0007.severity = none
 
 # IDE0008: Use explicit type instead of 'var' (enable - enforce explicit types)
-dotnet_diagnostic.IDE0008.severity = warning
+dotnet_diagnostic.IDE0008.severity = suggestion
 
 # IDE0090: Use 'new(...)'
 dotnet_diagnostic.IDE0090.severity = none
@@ -52,8 +67,8 @@ dotnet_diagnostic.IDE0030.severity = suggestion
 dotnet_diagnostic.IDE0031.severity = suggestion
 
 # IDE0044: Add readonly modifier
-dotnet_diagnostic.IDE0044.severity = warning
-dotnet_style_readonly_field = true:warning
+dotnet_diagnostic.IDE0044.severity = suggestion
+dotnet_style_readonly_field = true:suggestion
 
 # IDE0045: Use conditional expression for assignment
 dotnet_diagnostic.IDE0045.severity = none
@@ -68,7 +83,7 @@ dotnet_diagnostic.IDE0071.severity = suggestion
 dotnet_style_prefer_simplified_interpolation = true:suggestion
 
 # IDE0082: Convert typeof to nameof
-dotnet_diagnostic.IDE0082.severity = warning
+dotnet_diagnostic.IDE0082.severity = suggestion
 
 # IDE0083: Use pattern matching (not pattern)
 dotnet_diagnostic.IDE0083.severity = suggestion
@@ -99,11 +114,11 @@ resharper_arrange_type_member_modifiers_highlighting = hint
 resharper_arrange_type_modifiers_highlighting = hint
 resharper_built_in_type_reference_style_for_member_access_highlighting = hint
 resharper_built_in_type_reference_style_highlighting = hint
-resharper_redundant_base_qualifier_highlighting = warning
-resharper_suggest_var_or_type_built_in_types_highlighting = warning
-resharper_suggest_var_or_type_deconstruction_declarations_highlighting = warning
-resharper_suggest_var_or_type_elsewhere_highlighting = warning
-resharper_suggest_var_or_type_simple_types_highlighting = warning
+resharper_redundant_base_qualifier_highlighting = suggestion
+resharper_suggest_var_or_type_built_in_types_highlighting = suggestion
+resharper_suggest_var_or_type_deconstruction_declarations_highlighting = suggestion
+resharper_suggest_var_or_type_elsewhere_highlighting = suggestion
+resharper_suggest_var_or_type_simple_types_highlighting = suggestion
 csharp_indent_labels = one_less_than_current
 csharp_using_directive_placement = outside_namespace:silent
 csharp_prefer_simple_using_statement = true:suggestion
@@ -158,7 +173,7 @@ dotnet_diagnostic.CA1062.severity = none
 dotnet_diagnostic.CA1303.severity = none
 
 # CA1716: Identifiers should not match keywords
-dotnet_diagnostic.CA1716.severity = warning
+dotnet_diagnostic.CA1716.severity = suggestion
 
 # CA1822: Mark members as static
 dotnet_diagnostic.CA1822.severity = suggestion
@@ -216,7 +231,7 @@ dotnet_naming_rule.private_static_readonly_should_be_pascal_case.severity = sugg
 dotnet_naming_rule.private_static_readonly_should_be_pascal_case.symbols = private_static_readonly
 dotnet_naming_rule.private_static_readonly_should_be_pascal_case.style = pascal_case
 
-dotnet_naming_rule.private_fields_should_be_camelcase_with_underscore.severity = warning
+dotnet_naming_rule.private_fields_should_be_camelcase_with_underscore.severity = suggestion
 dotnet_naming_rule.private_fields_should_be_camelcase_with_underscore.symbols = private_fields
 dotnet_naming_rule.private_fields_should_be_camelcase_with_underscore.style = underscore_camelcase
 
